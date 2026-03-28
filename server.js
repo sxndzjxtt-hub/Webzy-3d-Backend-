@@ -1,23 +1,19 @@
 const express = require("express");
-const fetch = require("node-fetch");
 const cors = require("cors");
 
 const app = express();
 
 app.use(cors());
-app.options("*", cors());
 app.use(express.json());
 
-// IMPORTANT: allow all methods
-app.all("/generate", async (req, res) => {
+app.get("/", (req, res) => {
+  res.send("Webzy backend running 🚀");
+});
 
-  if (req.method !== "POST") {
-    return res.send("Use POST request");
-  }
-
-  const { prompt } = req.body;
-
+app.post("/generate", async (req, res) => {
   try {
+    const prompt = req.body?.prompt || "simple website";
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -29,22 +25,23 @@ app.all("/generate", async (req, res) => {
         messages: [
           {
             role: "user",
-            content: `Create a modern animated website for: ${prompt}`
+            content: `Create a clean modern website HTML with styling for: ${prompt}`
           }
         ]
       })
     });
 
     const data = await response.json();
-    res.send(data.choices[0].message.content);
+
+    const html = data?.choices?.[0]?.message?.content 
+      || "<h2 style='color:red'>AI failed 😢</h2>";
+
+    res.send(html);
 
   } catch (err) {
-    res.status(500).send("Error");
+    console.error("ERROR:", err);
+    res.send("<h2 style='color:red'>Server crash 😢</h2>");
   }
-});
-
-app.get("/", (req, res) => {
-  res.send("Webzy backend running 🚀");
 });
 
 const PORT = process.env.PORT || 3000;
