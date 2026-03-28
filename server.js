@@ -3,11 +3,17 @@ const fetch = require("node-fetch");
 const cors = require("cors");
 
 const app = express();
-app.use(cors());
 
+app.use(cors());
 app.use(express.json());
 
-app.post("/generate", async (req, res) => {
+// IMPORTANT: allow all methods
+app.all("/generate", async (req, res) => {
+
+  if (req.method !== "POST") {
+    return res.send("Use POST request");
+  }
+
   const { prompt } = req.body;
 
   try {
@@ -22,19 +28,17 @@ app.post("/generate", async (req, res) => {
         messages: [
           {
             role: "user",
-            content: `Create a modern animated website with sections (navbar, hero, about, contact) for: ${prompt}. Use HTML + CSS only.`
+            content: `Create a modern animated website for: ${prompt}`
           }
         ]
       })
     });
 
     const data = await response.json();
-    const html = data.choices[0].message.content;
-
-    res.send(html);
+    res.send(data.choices[0].message.content);
 
   } catch (err) {
-    res.status(500).send("Error generating website");
+    res.status(500).send("Error");
   }
 });
 
@@ -42,4 +46,4 @@ app.get("/", (req, res) => {
   res.send("Webzy backend running 🚀");
 });
 
-app.listen(3000, () => console.log("Server running on 3000"));
+app.listen(3000, () => console.log("Server running"));
